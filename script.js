@@ -1,36 +1,96 @@
-function getGrade(topPercent) {
-  if (topPercent <= 4) return 1;
-  if (topPercent <= 11) return 2;
-  if (topPercent <= 23) return 3;
-  if (topPercent <= 40) return 4;
-  if (topPercent <= 60) return 5;
-  if (topPercent <= 77) return 6;
-  if (topPercent <= 89) return 7;
-  if (topPercent <= 96) return 8;
-  return 9;
+function getGrade(percent) {
+  if (percent <= 4) return 1;
+  else if (percent <= 11) return 2;
+  else if (percent <= 23) return 3;
+  else if (percent <= 40) return 4;
+  else if (percent <= 60) return 5;
+  else if (percent <= 77) return 6;
+  else if (percent <= 89) return 7;
+  else if (percent <= 96) return 8;
+  else return 9;
 }
+
+const cutLines = [4, 11, 23, 40, 60, 77, 89, 96, 100];
+const subjects = ["국어", "영어", "수학", "사회", "과학", "역사"];
 
 function calculate() {
   let grades = [];
+  let percents = [];
 
+  // 1️⃣ 과목별 계산
   for (let i = 0; i < 6; i++) {
-    let rank = Number(document.getElementById(`rank${i}`).value);
-    let total = Number(document.getElementById(`total${i}`).value);
+    const rank = Number(document.getElementById(`rank${i}`).value);
+    const total = Number(document.getElementById(`total${i}`).value);
+    const cell = document.getElementById(`result${i}`);
 
-    if (!rank || !total || rank < 1 || rank > total) {
-      alert("모든 값을 올바르게 입력하세요.");
-      return;
+    if (!rank || !total || rank > total) {
+      cell.innerText = "-";
+      continue;
     }
 
-    let topPercent = (rank / total) * 100;
-    let grade = getGrade(topPercent);
+    const percent = (rank / total) * 100;
+    const grade = getGrade(percent);
+
+    percents.push(percent);
     grades.push(grade);
 
-    document.getElementById(`result${i}`).innerText =
-      `상위 ${topPercent.toFixed(1)}% → ${grade}등급`;
+    cell.innerText = `상위 ${percent.toFixed(1)}% / ${grade}등급`;
   }
 
-  let avg = grades.reduce((a, b) => a + b) / grades.length;
-  document.getElementById("average").innerText =
-    `전체 평균 등급 : ${avg.toFixed(2)}등급`;
+  if (grades.length === 0) return;
+
+  // 평균 등급
+  const avg = grades.reduce((a, b) => a + b) / grades.length;
+
+  let resultText = `평균 등급: ${avg.toFixed(2)}\n\n`;
+
+  // 2️⃣ 영향도 분석
+  let worstIndex = 0;
+  let maxDiff = -Infinity;
+
+  grades.forEach((g, i) => {
+    const diff = g - avg;
+    if (diff > maxDiff) {
+      maxDiff = diff;
+      worstIndex = i;
+    }
+  });
+
+  resultText += `📉 평균을 가장 깎는 과목: ${subjects[worstIndex]}\n`;
+
+  // 3️⃣ 안정성 분석
+  let unstableCount = 0;
+
+  percents.forEach(p => {
+    for (let c of cutLines) {
+      if (Math.abs(p - c) <= 2) {
+        unstableCount++;
+        break;
+      }
+    }
+  });
+
+  let stability;
+  if (unstableCount >= 3) stability = "⚠️ 위험";
+  else if (unstableCount === 2) stability = "△ 보통";
+  else stability = "◎ 안정";
+
+  resultText += `📊 안정성 평가: ${stability} (불안정 과목 ${unstableCount}개)\n\n`;
+
+  // 4️⃣ 시뮬레이션
+  resultText += "🔁 등급 +1 시 평균 변화\n";
+
+  grades.forEach((g, i) => {
+    if (g === 1) return;
+
+    const simulated = [...grades];
+    simulated[i] = g - 1;
+
+    const newAvg = simulated.reduce((a, b) => a + b) / simulated.length;
+    const diff = avg - newAvg;
+
+    resultText += `${subjects[i]} → 평균 ${diff.toFixed(2)} 상승\n`;
+  });
+
+  document.getElementById("average").innerText = resultText;
 }
