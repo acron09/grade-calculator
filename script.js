@@ -59,16 +59,30 @@ function calculate() {
   resultText += `📉 평균을 가장 깎는 과목: ${subjects[worstIndex]}\n`;
 
   // 3️⃣ 안정성 분석
-  let unstableCount = 0;
+let unstableSubjects = [];
 
-  percents.forEach(p => {
-    for (let c of cutLines) {
-      if (Math.abs(p - c) <= 2) {
-        unstableCount++;
-        break;
-      }
+percents.forEach((p, i) => {
+  for (let c of cutLines) {
+    if (Math.abs(p - c) <= 2) {
+      unstableSubjects.push(subjects[i]);
+      break;
     }
-  });
+  }
+});
+
+let stability;
+if (unstableSubjects.length >= 3) stability = "⚠️ 위험";
+else if (unstableSubjects.length === 2) stability = "△ 보통";
+else stability = "◎ 안정";
+
+resultText += `📊 안정성 평가: ${stability}\n`;
+
+if (unstableSubjects.length > 0) {
+  resultText += `⚠️ 불안정 과목: ${unstableSubjects.join(", ")}\n`;
+} else {
+  resultText += `⚠️ 불안정 과목: 없음\n`;
+}
+
 
   let stability;
   if (unstableCount >= 3) stability = "⚠️ 위험";
@@ -77,20 +91,8 @@ function calculate() {
 
   resultText += `📊 안정성 평가: ${stability} (불안정 과목 ${unstableCount}개)\n\n`;
 
-  // 4️⃣ 시뮬레이션
-  resultText += "🔁 등급 +1 시 평균 변화\n";
 
-  grades.forEach((g, i) => {
-    if (g === 1) return;
-
-    const simulated = [...grades];
-    simulated[i] = g - 1;
-
-    const newAvg = simulated.reduce((a, b) => a + b) / simulated.length;
-    const diff = avg - newAvg;
-
-    resultText += `${subjects[i]} → 평균 ${diff.toFixed(2)} 상승\n`;
-  });
 
   document.getElementById("average").innerText = resultText;
 }
+
