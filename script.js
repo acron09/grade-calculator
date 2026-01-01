@@ -45,7 +45,7 @@ function calculate() {
 
   let text = `평균 등급: ${avg.toFixed(2)}\n\n`;
 
-  // 영향도
+  // 📉 영향도 분석
   let worstIndex = 0;
   let maxDiff = -Infinity;
 
@@ -59,24 +59,25 @@ function calculate() {
 
   text += `📉 평균을 가장 깎는 과목: ${subjects[worstIndex]}\n`;
 
-  // 안정성
-  let unstable = [];
+  // 📊 안정성 분석
+  let unstableSubjects = [];
 
   percents.forEach((p, i) => {
     for (let c of cutLines) {
       if (Math.abs(p - c) <= 2) {
-        unstable.push(subjects[i]);
+        unstableSubjects.push(subjects[i]);
         break;
       }
     }
   });
 
-  let stability = "◎ 안정";
-  if (unstable.length === 2) stability = "△ 보통";
-  if (unstable.length >= 3) stability = "⚠️ 위험";
+  let stability;
+  if (unstableSubjects.length >= 3) stability = "⚠️ 위험";
+  else if (unstableSubjects.length === 2) stability = "△ 보통";
+  else stability = "◎ 안정";
 
   text += `📊 안정성 평가: ${stability}\n`;
-  text += `⚠️ 불안정 과목: ${unstable.length ? unstable.join(", ") : "없음"}`;
+  text += `⚠️ 불안정 과목: ${unstableSubjects.length ? unstableSubjects.join(", ") : "없음"}`;
 
   document.getElementById("average").innerText = text;
 }
