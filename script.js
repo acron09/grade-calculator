@@ -17,34 +17,35 @@ function calculate() {
   let grades = [];
   let percents = [];
 
-  // 1️⃣ 과목별 계산
   for (let i = 0; i < 6; i++) {
-    const rank = Number(document.getElementById(`rank${i}`).value);
-    const total = Number(document.getElementById(`total${i}`).value);
-    const cell = document.getElementById(`result${i}`);
+    const rankEl = document.getElementById(`rank${i}`);
+    const totalEl = document.getElementById(`total${i}`);
+    const resultEl = document.getElementById(`result${i}`);
+
+    if (!rankEl || !totalEl || !resultEl) return;
+
+    const rank = Number(rankEl.value);
+    const total = Number(totalEl.value);
 
     if (!rank || !total || rank > total) {
-      cell.innerText = "-";
-      continue;
+      resultEl.innerText = "-";
+      return;
     }
 
     const percent = (rank / total) * 100;
     const grade = getGrade(percent);
 
-    percents.push(percent);
     grades.push(grade);
+    percents.push(percent);
 
-    cell.innerText = `상위 ${percent.toFixed(1)}% / ${grade}등급`;
+    resultEl.innerText = `상위 ${percent.toFixed(1)}% / ${grade}등급`;
   }
 
-  if (grades.length === 0) return;
+  const avg = grades.reduce((a, b) => a + b, 0) / grades.length;
 
-  // 평균 등급
-  const avg = grades.reduce((a, b) => a + b) / grades.length;
+  let text = `평균 등급: ${avg.toFixed(2)}\n\n`;
 
-  let resultText = `평균 등급: ${avg.toFixed(2)}\n\n`;
-
-  // 2️⃣ 영향도 분석
+  // 영향도
   let worstIndex = 0;
   let maxDiff = -Infinity;
 
@@ -56,43 +57,26 @@ function calculate() {
     }
   });
 
-  resultText += `📉 평균을 가장 깎는 과목: ${subjects[worstIndex]}\n`;
+  text += `📉 평균을 가장 깎는 과목: ${subjects[worstIndex]}\n`;
 
-  // 3️⃣ 안정성 분석
-let unstableSubjects = [];
+  // 안정성
+  let unstable = [];
 
-percents.forEach((p, i) => {
-  for (let c of cutLines) {
-    if (Math.abs(p - c) <= 2) {
-      unstableSubjects.push(subjects[i]);
-      break;
+  percents.forEach((p, i) => {
+    for (let c of cutLines) {
+      if (Math.abs(p - c) <= 2) {
+        unstable.push(subjects[i]);
+        break;
+      }
     }
-  }
-});
+  });
 
-let stability;
-if (unstableSubjects.length >= 3) stability = "⚠️ 위험";
-else if (unstableSubjects.length === 2) stability = "△ 보통";
-else stability = "◎ 안정";
+  let stability = "◎ 안정";
+  if (unstable.length === 2) stability = "△ 보통";
+  if (unstable.length >= 3) stability = "⚠️ 위험";
 
-resultText += `📊 안정성 평가: ${stability}\n`;
+  text += `📊 안정성 평가: ${stability}\n`;
+  text += `⚠️ 불안정 과목: ${unstable.length ? unstable.join(", ") : "없음"}`;
 
-if (unstableSubjects.length > 0) {
-  resultText += `⚠️ 불안정 과목: ${unstableSubjects.join(", ")}\n`;
-} else {
-  resultText += `⚠️ 불안정 과목: 없음\n`;
+  document.getElementById("average").innerText = text;
 }
-
-
-  let stability;
-  if (unstableCount >= 3) stability = "⚠️ 위험";
-  else if (unstableCount === 2) stability = "△ 보통";
-  else stability = "◎ 안정";
-
-  resultText += `📊 안정성 평가: ${stability} (불안정 과목 ${unstableCount}개)\n\n`;
-
-
-
-  document.getElementById("average").innerText = resultText;
-}
-
